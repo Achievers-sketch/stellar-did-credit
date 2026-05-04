@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, Env};
+use soroban_sdk::{contract, contractimpl};
 
 #[contract]
 pub struct RevocationRegistry;
