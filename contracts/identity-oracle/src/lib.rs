@@ -1,6 +1,6 @@
 #![no_std]
 #[allow(unused_imports)]
-use soroban_sdk::{contract, contractimpl, contracttype, Address, BytesN, Env, String, Vec};
+use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, BytesN, Env, String, Vec};
 
 /// Storage key variants for the identity-oracle contract.
 #[contracttype]
@@ -51,19 +51,56 @@ impl IdentityOracle {
         env.storage().persistent().set(&DataKey::TrustedIssuer(issuer), &true);
     }
 
-    pub fn anchor_did(_env: Env, _subject: Address, _did_doc_cid: String) {
-        // TODO: require subject auth, store CID, emit DIDAnchored event
-        panic!("not yet implemented")
+    pub fn anchor_did(env: Env, subject: Address, did_doc_cid: String) {
+        subject.require_auth();
+        env.storage()
+            .persistent()
+            .set(&DataKey::DIDDocument(subject.clone()), &did_doc_cid);
+        env.events()
+            .publish((symbol_short!("DIDAnch"),), (subject, did_doc_cid));
     }
 
     pub fn anchor_vc(
-        _env: Env,
-        _issuer: Address,
-        _subject: Address,
-        _vc_hash: BytesN<32>,
+        env: Env,
+        issuer: Address,
+        subject: Address,
+        vc_hash: BytesN<32>,
     ) {
-        // TODO: require issuer auth, check issuer is trusted, store VCRecord
-        panic!("not yet implemented")
+        issuer.require_auth();
+        if !env
+            .storage()
+            .persistent()
+            .has(&DataKey::TrustedIssuer(issuer.clone()))
+        {
+            panic!("issuer not trusted");
+        }
+        if !env
+            .storage()
+            .persistent()
+            .has(&DataKey::DIDDocument(subject.clone()))
+        {
+            panic!("DID not anchored");
+        }
+
+        let key = DataKey::VCAnchors(subject.clone());
+        let mut anchors: Vec<VCRecord> = env
+            .storage()
+            .persistent()
+            .get(&key)
+            .unwrap_or(Vec::new(&env));
+
+        let record = VCRecord {
+            vc_hash: vc_hash.clone(),
+            issuer: issuer.clone(),
+            anchored_at: env.ledger().timestamp(),
+            revoked: false,
+        };
+
+        anchors.push_back(record);
+        env.storage().persistent().set(&key, &anchors);
+
+        env.events()
+            .publish((symbol_short!("VCAnch"),), (subject, issuer, vc_hash));
     }
 
     pub fn is_verified(_env: Env, _subject: Address) -> bool {
@@ -86,15 +123,24 @@ mod tests {
     use soroban_sdk::{testutils::Address as _, Env};
 
     #[test]
-    fn test_initialize_sets_admin() {
+    fn test_anchor_did_stores_cid() {
         let env = Env::default();
         env.mock_all_auths();
         let contract_id = env.register_contract(None, IdentityOracle);
         let client = IdentityOracleClient::new(&env, &contract_id);
+
         let admin = Address::generate(&env);
         client.initialize(&admin);
-        // verify by calling register_issuer as admin (should not panic)
+
         let issuer = Address::generate(&env);
         client.register_issuer(&admin, &issuer);
+
+        let subject = Address::generate(&env);
+        let cid = String::from_str(&env, "ipfs://Qm...");
+        client.anchor_did(&subject, &cid);
+
+        // verify by calling anchor_vc (which requires DID to be set)
+        let vc_hash = BytesN::from_array(&env, &[0u8; 32]);
+        client.anchor_vc(&issuer, &subject, &vc_hash);
     }
 }
