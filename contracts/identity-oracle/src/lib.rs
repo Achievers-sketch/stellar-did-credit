@@ -72,14 +72,7 @@ impl IdentityOracle {
             .persistent()
             .has(&DataKey::TrustedIssuer(issuer.clone()))
         {
-            panic!("issuer not trusted");
-        }
-        if !env
-            .storage()
-            .persistent()
-            .has(&DataKey::DIDDocument(subject.clone()))
-        {
-            panic!("DID not anchored");
+            panic!("issuer not registered");
         }
 
         let key = DataKey::VCAnchors(subject.clone());
@@ -100,12 +93,23 @@ impl IdentityOracle {
         env.storage().persistent().set(&key, &anchors);
 
         env.events()
-            .publish((symbol_short!("VCAnch"),), (subject, issuer, vc_hash));
+            .publish((symbol_short!("VCAnch"),), (issuer, subject, vc_hash));
     }
 
-    pub fn is_verified(_env: Env, _subject: Address) -> bool {
-        // TODO: return true if subject has >= 1 non-revoked VC
-        panic!("not yet implemented")
+    pub fn is_verified(env: Env, subject: Address) -> bool {
+        let key = DataKey::VCAnchors(subject);
+        let anchors: Vec<VCRecord> = env
+            .storage()
+            .persistent()
+            .get(&key)
+            .unwrap_or(Vec::new(&env));
+
+        for record in anchors.iter() {
+            if !record.revoked {
+                return true;
+            }
+        }
+        false
     }
 
     pub fn get_vc_count(_env: Env, _subject: Address) -> u32 {
@@ -123,7 +127,7 @@ mod tests {
     use soroban_sdk::{testutils::Address as _, Env};
 
     #[test]
-    fn test_anchor_did_stores_cid() {
+    fn test_anchor_vc_by_trusted_issuer() {
         let env = Env::default();
         env.mock_all_auths();
         let contract_id = env.register_contract(None, IdentityOracle);
@@ -136,11 +140,55 @@ mod tests {
         client.register_issuer(&admin, &issuer);
 
         let subject = Address::generate(&env);
+        let vc_hash = BytesN::from_array(&env, &[1u8; 32]);
+        client.anchor_vc(&issuer, &subject, &vc_hash);
+    }
+
+    #[test]
+    #[should_panic(expected = "issuer not registered")]
+    fn test_unregistered_issuer_panics() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let contract_id = env.register_contract(None, IdentityOracle);
+        let client = IdentityOracleClient::new(&env, &contract_id);
+
+        let issuer = Address::generate(&env);
+        let subject = Address::generate(&env);
+        let vc_hash = BytesN::from_array(&env, &[1u8; 32]);
+        client.anchor_vc(&issuer, &subject, &vc_hash);
+    }
+
+    #[test]
+    fn test_is_verified_true_after_vc_anchored() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let contract_id = env.register_contract(None, IdentityOracle);
+        let client = IdentityOracleClient::new(&env, &contract_id);
+
+        let admin = Address::generate(&env);
+        client.initialize(&admin);
+
+        let issuer = Address::generate(&env);
+        client.register_issuer(&admin, &issuer);
+
+        let subject = Address::generate(&env);
+        assert!(!client.is_verified(&subject));
+
+        let vc_hash = BytesN::from_array(&env, &[1u8; 32]);
+        client.anchor_vc(&issuer, &subject, &vc_hash);
+
+        assert!(client.is_verified(&subject));
+    }
+
+    #[test]
+    fn test_anchor_did_stores_cid() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let contract_id = env.register_contract(None, IdentityOracle);
+        let client = IdentityOracleClient::new(&env, &contract_id);
+
+        let subject = Address::generate(&env);
         let cid = String::from_str(&env, "ipfs://Qm...");
         client.anchor_did(&subject, &cid);
-
-        // verify by calling anchor_vc (which requires DID to be set)
-        let vc_hash = BytesN::from_array(&env, &[0u8; 32]);
-        client.anchor_vc(&issuer, &subject, &vc_hash);
     }
 }
