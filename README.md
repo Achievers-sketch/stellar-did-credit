@@ -347,7 +347,7 @@ Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and 
 
 ### How to contribute
 
-1. Browse open issues — look for `good first issue` to start
+1. Browse [open issues](https://github.com/cybermax4200/stellar-did-credit/issues) — look for `good first issue` to start
 2. Comment on the issue to signal you're working on it
 3. Fork the repo and create a branch: `git checkout -b feat/your-feature`
 4. Write your code with tests — `cargo test --workspace` must pass
@@ -370,21 +370,6 @@ Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and 
 - Conventional commit messages: `feat:`, `fix:`, `test:`, `docs:`, `chore:`
 
 Full setup and guidelines: [CONTRIBUTING.md](CONTRIBUTING.md)
-
-### Open issues
-
-| #                                                                   | Title                                                               | Complexity |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------- | ---------- |
-| [#7](https://github.com/cybermax4200/stellar-did-credit/issues/7)   | Implement `anchorDID()` in TypeScript SDK                           | Medium     |
-| [#8](https://github.com/cybermax4200/stellar-did-credit/issues/8)   | Implement `issueVC()` in TypeScript SDK                             | Medium     |
-| [#9](https://github.com/cybermax4200/stellar-did-credit/issues/9)   | Implement `verifyVC()` and `isVerified()` in TypeScript SDK         | Trivial    |
-| [#10](https://github.com/cybermax4200/stellar-did-credit/issues/10) | Build `stellar-id did create` CLI command                           | Medium     |
-| [#11](https://github.com/cybermax4200/stellar-did-credit/issues/11) | ZK proof research spike for score disclosure                        | High       |
-| [#12](https://github.com/cybermax4200/stellar-did-credit/issues/12) | Design governance contract for weight updates                       | High       |
-| [#13](https://github.com/cybermax4200/stellar-did-credit/issues/13) | Cross-contract: credit-oracle reads `vc_count` from identity-oracle | High       |
-| [#14](https://github.com/cybermax4200/stellar-did-credit/issues/14) | Add score freshness check and recompute trigger                     | Medium     |
-| [#15](https://github.com/cybermax4200/stellar-did-credit/issues/15) | Write issuer onboarding guide                                       | Trivial    |
-| [#16](https://github.com/cybermax4200/stellar-did-credit/issues/16) | Integration test: full flow against live testnet                    | Medium     |
 
 ### Resources
 
