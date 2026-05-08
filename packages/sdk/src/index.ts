@@ -34,7 +34,7 @@ export class StellarDIDCreditSDK {
   constructor(private config: ProtocolConfig) {}
 
   async anchorDID(subjectKeypair: any, didDocCid: string): Promise<string> {
-    throw new Error("not implemented — see GitHub issue #7");
+    throw new Error("not implemented");
   }
 
   async issueVC(
@@ -42,7 +42,7 @@ export class StellarDIDCreditSDK {
     subjectAddress: string,
     vcHash: Buffer,
   ): Promise<string> {
-    throw new Error("not implemented — see GitHub issue #8");
+    throw new Error("not implemented");
   }
 
   /**
@@ -95,11 +95,11 @@ export class StellarDIDCreditSDK {
   }
 
   async verifyVC(subjectAddress: string, vcHash: Buffer): Promise<boolean> {
-    throw new Error("not implemented — see GitHub issue #9");
+    throw new Error("not implemented");
   }
 
   async isVerified(subjectAddress: string): Promise<boolean> {
-    throw new Error("not implemented — see GitHub issue #9");
+    throw new Error("not implemented");
   }
 }
 

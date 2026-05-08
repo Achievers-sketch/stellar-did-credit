@@ -293,29 +293,29 @@ console.log(score.score); // e.g. 612
 
 ### SDK status
 
-| Method                           | Status                                                                            |
-| -------------------------------- | --------------------------------------------------------------------------------- |
-| `getScore(address)`              | ✅ Implemented                                                                    |
-| `isVerified(address)`            | 🚧 Open — [Issue #9](https://github.com/cybermax4200/stellar-did-credit/issues/9) |
-| `anchorDID(keypair, cid)`        | 🚧 Open — [Issue #7](https://github.com/cybermax4200/stellar-did-credit/issues/7) |
-| `issueVC(issuer, subject, hash)` | 🚧 Open — [Issue #8](https://github.com/cybermax4200/stellar-did-credit/issues/8) |
-| `verifyVC(subject, hash)`        | 🚧 Open — [Issue #9](https://github.com/cybermax4200/stellar-did-credit/issues/9) |
-| `revokeVC(issuer, hash)`         | 📋 Planned                                                                        |
+| Method                           | Status         |
+| -------------------------------- | -------------- |
+| `getScore(address)`              | ✅ Implemented |
+| `isVerified(address)`            | 🚧 Open        |
+| `anchorDID(keypair, cid)`        | 🚧 Open        |
+| `issueVC(issuer, subject, hash)` | 🚧 Open        |
+| `verifyVC(subject, hash)`        | 🚧 Open        |
+| `revokeVC(issuer, hash)`         | 📋 Planned     |
 
 ---
 
 ## Component status
 
-| Component               | Status         | Notes                                                                     |
-| ----------------------- | -------------- | ------------------------------------------------------------------------- |
-| identity-oracle         | ✅ Complete    | All functions implemented and tested                                      |
-| credit-oracle           | ✅ Complete    | Scoring formula live on testnet                                           |
-| revocation-registry     | ✅ Complete    | Batch revocation supported                                                |
-| TypeScript SDK          | 🚧 In progress | `getScore` done, rest open                                                |
-| CLI tool                | 📋 Planned     | [Issue #10](https://github.com/cybermax4200/stellar-did-credit/issues/10) |
-| Cross-contract vc_count | 📋 Planned     | [Issue #13](https://github.com/cybermax4200/stellar-did-credit/issues/13) |
-| ZK proof layer          | 📋 Research    | [Issue #11](https://github.com/cybermax4200/stellar-did-credit/issues/11) |
-| Governance contract     | 📋 Planned     | [Issue #12](https://github.com/cybermax4200/stellar-did-credit/issues/12) |
+| Component               | Status         | Notes                                |
+| ----------------------- | -------------- | ------------------------------------ |
+| identity-oracle         | ✅ Complete    | All functions implemented and tested |
+| credit-oracle           | ✅ Complete    | Scoring formula live on testnet      |
+| revocation-registry     | ✅ Complete    | Batch revocation supported           |
+| TypeScript SDK          | 🚧 In progress | `getScore` done, rest open           |
+| CLI tool                | 📋 Planned     |                                      |
+| Cross-contract vc_count | 📋 Planned     |                                      |
+| ZK proof layer          | 📋 Research    |                                      |
+| Governance contract     | 📋 Planned     |                                      |
 
 ---
 
