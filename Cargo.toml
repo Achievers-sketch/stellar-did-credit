@@ -3,6 +3,7 @@ members = [
   "contracts/identity-oracle",
   "contracts/credit-oracle",
   "contracts/revocation-registry",
+  "contracts/tests",
 ]
 resolver = "2"
 
