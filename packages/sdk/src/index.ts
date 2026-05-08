@@ -4,6 +4,11 @@ import {
   TransactionBuilder,
   Networks,
   BASE_FEE,
+  Account,
+  scValToNative,
+  nativeToScVal,
+  Address,
+  xdr,
 } from "@stellar/stellar-sdk";
 
 export interface ScoreRecord {
@@ -22,6 +27,9 @@ export interface ProtocolConfig {
   rpcUrl: string;
 }
 
+/** Zero-balance placeholder account used for read-only simulations. */
+const SIM_ACCOUNT = "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN";
+
 export class StellarDIDCreditSDK {
   constructor(private config: ProtocolConfig) {}
 
@@ -37,8 +45,53 @@ export class StellarDIDCreditSDK {
     throw new Error("not implemented — see GitHub issue #8");
   }
 
+  /**
+   * Fetch the on-chain ScoreRecord for a subject address from the credit-oracle.
+   *
+   * Uses a read-only simulation (no signing required) against the configured RPC endpoint.
+   *
+   * @param subjectAddress - Stellar G... address of the subject
+   * @returns Parsed ScoreRecord
+   */
   async getScore(subjectAddress: string): Promise<ScoreRecord> {
-    throw new Error("not implemented — will be implemented next");
+    // 1. Create RPC server
+    const server = new SorobanRpc.Server(this.config.rpcUrl);
+
+    // 2. Instantiate the credit-oracle contract
+    const contract = new Contract(this.config.creditOracleId);
+
+    // 3. Build a read-only transaction — use a well-known funded account as the fee source
+    //    for simulation; no actual submission occurs.
+    const sourceAccount = new Account(SIM_ACCOUNT, "0");
+    const tx = new TransactionBuilder(sourceAccount, {
+      fee: BASE_FEE,
+      networkPassphrase: this.config.networkPassphrase,
+    })
+      .addOperation(
+        contract.call("get_score", new Address(subjectAddress).toScVal()),
+      )
+      .setTimeout(30)
+      .build();
+
+    // 4. Simulate to get the return value without submitting
+    const sim = await server.simulateTransaction(tx);
+
+    if (SorobanRpc.Api.isSimulationError(sim)) {
+      throw new Error(`Simulation failed: ${sim.error}`);
+    }
+
+    if (!SorobanRpc.Api.isSimulationSuccess(sim)) {
+      throw new Error("Simulation returned unexpected response");
+    }
+
+    const resultScVal = sim.result?.retval;
+    if (!resultScVal) {
+      throw new Error("No return value in simulation result");
+    }
+
+    // 5. Parse the ScoreRecord struct.
+    //    Soroban structs are returned as ScMap with symbol keys.
+    return parseScoreRecord(resultScVal);
   }
 
   async verifyVC(subjectAddress: string, vcHash: Buffer): Promise<boolean> {
@@ -48,6 +101,23 @@ export class StellarDIDCreditSDK {
   async isVerified(subjectAddress: string): Promise<boolean> {
     throw new Error("not implemented — see GitHub issue #9");
   }
+}
+
+/**
+ * Parse a Soroban ScVal representing a ScoreRecord struct into the TS interface.
+ * The contract returns a struct as an ScMap with ScSymbol keys.
+ */
+function parseScoreRecord(scVal: xdr.ScVal): ScoreRecord {
+  // scValToNative converts ScMap → plain object, ScU32 → number, ScI128 → bigint, etc.
+  const raw = scValToNative(scVal) as Record<string, unknown>;
+
+  return {
+    score: Number(raw["score"]),
+    lastUpdated: Number(raw["last_updated"]),
+    vcCount: Number(raw["vc_count"]),
+    repaymentRate: Number(raw["repayment_rate"]),
+    txVolume30d: BigInt(raw["tx_volume_30d"] as bigint),
+  };
 }
 
 export default StellarDIDCreditSDK;
